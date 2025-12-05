@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Chatbot</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    #chat { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; }
+    input { width: 80%; }
+  </style>
+</head>
+<body>
+  <h1>Chatbot Sederhana</h1>
+  <div id="chat"></div>
+  <input id="userInput" placeholder="Ketik pesan...">
+  <button onclick="sendMessage()">Kirim</button>
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('userInput');
+
+    async function sendMessage() {
+      const message = input.value.trim();
+      if (!message) return;
+      
+      // Tampilkan pesan user
+      chat.innerHTML += `<p><strong>Anda:</strong> ${message}</p>`;
+      input.value = '';
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        // Gunakan proxy untuk hindari CORS (ganti dengan URL proxy Anda jika perlu)
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';  // Proxy gratis untuk testing
+        const apiUrl = 'https://dialogflow.googleapis.com/v2/projects/chatbot-simple-480114/agent/sessions/123456:detectIntent';
+        
+        const response = await fetch(proxyUrl + apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer AIzaSyApNHdKNU33EnVz47csbqRkRnf2py-IXc4`,
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'  // Untuk proxy
+          },
+          body: JSON.stringify({
+            queryInput: { text: { text: message, languageCode: 'id' } }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('API Response:', data);  // Debug: lihat di console
+        const reply = data.queryResult.fulfillmentText || 'Maaf, saya tidak mengerti.';
+        chat.innerHTML += `<p><strong>Bot:</strong> ${reply}</p>`;
+        chat.scrollTop = chat.scrollHeight;
+      } catch (error) {
+        console.error('Error:', error);
+        chat.innerHTML += `<p><strong>Bot:</strong> Oops, ada error: ${error.message}. Periksa console untuk detail.</p>`;
+        chat.scrollTop = chat.scrollHeight;
+      }
+    }
+  </script>
+</body>
+</html>
